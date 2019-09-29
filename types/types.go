@@ -22,6 +22,7 @@ type StatusResponse struct {
 	Id       string   `json:"id"`
 	ServerId string   `json:"serverid"`
 }
+
 type TaskData struct {
 	Result string `json:"result"`
 	Status JobStatus `json:"jobstatus"`
