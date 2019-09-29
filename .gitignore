@@ -10,3 +10,6 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+!/cmd/ljs-client/ljs-client
+!/cmd/ljs-server/ljs-server
+

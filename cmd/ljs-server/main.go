@@ -1,4 +1,4 @@
-package ljs_server
+package main
 
 import (
 	"context"
@@ -12,17 +12,16 @@ import (
 	"cloud.google.com/go/firestore"
 	"github.com/google/uuid"
 
-	"./long_john_silver/types"
+	"github.com/doitintl/long_john_silver/types"
 )
-
 
 var (
 	ServerId string
 	fsClient *firestore.Client
 )
 
-func worker(id string) {
 
+func worker(id string) {
 	now := time.Now().UTC()
 	counter := 0
 	for {
@@ -30,7 +29,7 @@ func worker(id string) {
 		dur := time.Since(now)
 		log.Println("Running for: ", dur)
 		if counter > 10 {
-			t := taskData{"We are golden", statusDone, dur.String(),"None of your business"}
+			t := types.TaskData{"We are golden", types.StatusDone, dur.String(), "None of your business"}
 			fsClient.Doc("tasks/"+id).Set(context.Background(), &t)
 			return
 		}
@@ -40,7 +39,7 @@ func worker(id string) {
 			log.Println(err)
 			return
 		}
-		var t taskData
+		var t types.TaskData
 		docsnap.DataTo(&t)
 		t.Duration = dur.String()
 		fsClient.Doc("tasks/"+id).Set(context.Background(), &t)
@@ -50,8 +49,8 @@ func worker(id string) {
 
 func longTaskHandler(w http.ResponseWriter, r *http.Request) {
 	id := uuid.New().String()
-	accepted := AcceptedResponse{ServerId, Task{"/taskstatus?task=" + id, id}}
-	t := taskData{"Nothing yet wait for it....", statusPending, "0", ServerId}
+	accepted := types.AcceptedResponse{ServerId, types.Task{"/taskstatus?task=" + id, id}}
+	t := types.TaskData{"Nothing yet wait for it....", types.StatusPending, "0", ServerId}
 	_, err := fsClient.Doc("tasks/"+id).Create(context.Background(), &t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -75,15 +74,15 @@ func taskStatusHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Task not found: " + task ))
+		w.Write([]byte("Task not found: " + task))
 		return
 	}
-	var t taskData
+	var t types.TaskData
 	docsnap.DataTo(&t)
-	if t.Status == statusDone {
+	if t.Status == types.StatusDone {
 		fsClient.Doc("tasks/" + task).Delete(ctx)
 	}
-	jobStatus := StatusResponse{t, task, ServerId}
+	jobStatus := types.StatusResponse{t, task, ServerId}
 	js, err := json.Marshal(jobStatus)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

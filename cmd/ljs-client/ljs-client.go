@@ -49,7 +49,7 @@ func getlongtask() (string, error){
 	}
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
-	var ac AcceptedResponse
+	var ac types.AcceptedResponse
 
 	if err = json.Unmarshal(body, &ac); err != nil {
 		log.Println(err)
@@ -76,7 +76,7 @@ func gettaskstatus(taskid string, id int) error {
 		}
 		defer res.Body.Close()
 		body, _ := ioutil.ReadAll(res.Body)
-		var st StatusResponse
+		var st types.StatusResponse
 		if err = json.Unmarshal(body, &st); err != nil {
 			log.Println(err)
 			return err

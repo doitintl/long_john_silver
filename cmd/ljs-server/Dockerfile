@@ -12,7 +12,7 @@ RUN go mod download
 
 
 FROM build_base AS builder
-COPY . .
+COPY /. .
 WORKDIR /workdir
 RUN cd /workdir &&  GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build  -ldflags "-w -s" -o /long_john_silver -tags netgo -installsuffix netgo .
 
