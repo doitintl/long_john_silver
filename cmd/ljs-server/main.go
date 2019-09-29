@@ -1,4 +1,4 @@
-package main
+package ljs_server
 
 import (
 	"context"
@@ -11,35 +11,10 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/google/uuid"
+
+	"./long_john_silver/types"
 )
 
-type JobStatus string
-
-const (
-	statusPending JobStatus = "PENDING"
-	statusDone    JobStatus = "Done"
-)
-
-type AcceptedResponse struct {
-	ServerId string
-	Task     Task `json:"task"`
-}
-
-type Task struct {
-	Href string `json:"href"`
-	Id   string `json:"id"`
-}
-
-type StatusResponse struct {
-	TaskData taskData
-	Id string
-	ServerId string
-}
-type taskData struct {
-	Result string
-	Status JobStatus
-	Duration string
-}
 
 var (
 	ServerId string
@@ -55,7 +30,7 @@ func worker(id string) {
 		dur := time.Since(now)
 		log.Println("Running for: ", dur)
 		if counter > 10 {
-			t := taskData{"We are golden", statusDone, dur.String()}
+			t := taskData{"We are golden", statusDone, dur.String(),"None of your business"}
 			fsClient.Doc("tasks/"+id).Set(context.Background(), &t)
 			return
 		}
@@ -76,7 +51,7 @@ func worker(id string) {
 func longTaskHandler(w http.ResponseWriter, r *http.Request) {
 	id := uuid.New().String()
 	accepted := AcceptedResponse{ServerId, Task{"/taskstatus?task=" + id, id}}
-	t := taskData{"Nothing yet wait for it....", statusPending, "0"}
+	t := taskData{"Nothing yet wait for it....", statusPending, "0", ServerId}
 	_, err := fsClient.Doc("tasks/"+id).Create(context.Background(), &t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -99,6 +74,7 @@ func taskStatusHandler(w http.ResponseWriter, r *http.Request) {
 	docsnap, err := fsClient.Doc("tasks/" + task).Get(ctx)
 	if err != nil {
 		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Task not found: " + task ))
 		return
 	}
@@ -127,7 +103,7 @@ func main() {
 	}
 	ctx := context.Background()
 	var err error
-	fsClient, err = firestore.NewClient(ctx, "ljs-cloud-run")
+	fsClient, err = firestore.NewClient(ctx, os.Getenv("PROJECT_ID"))
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}

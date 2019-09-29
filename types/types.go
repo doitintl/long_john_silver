@@ -3,8 +3,8 @@ package types
 type JobStatus string
 
 const (
-	statusPending JobStatus = "PENDING"
-	statusDone    JobStatus = "Done"
+	StatusPending JobStatus = "PENDING"
+	StatusDone    JobStatus = "Done"
 )
 
 type AcceptedResponse struct {
@@ -18,11 +18,11 @@ type Task struct {
 }
 
 type StatusResponse struct {
-	TaskData taskData `json:"taskdata"`
-	Id string  `json:"id"`
-	ServerId string `json:"serverid"`
+	TaskData TaskData `json:"taskdata"`
+	Id       string   `json:"id"`
+	ServerId string   `json:"serverid"`
 }
-type taskData struct {
+type TaskData struct {
 	Result string `json:"result"`
 	Status JobStatus `json:"jobstatus"`
 	Duration string `json:"duration"`
