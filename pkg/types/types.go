@@ -30,3 +30,4 @@ type TaskData struct {
 	OriginalServer string `json:"originalserver"`
 
 }
+
