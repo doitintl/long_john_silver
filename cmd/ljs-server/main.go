@@ -6,29 +6,53 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"os"
 	"time"
 
 	"cloud.google.com/go/firestore"
 	"github.com/google/uuid"
+	"github.com/spf13/viper"
 
 	"github.com/doitintl/long_john_silver/types"
 )
 
+type config struct {
+	Port             string
+	ProjectId        string
+	WorkerSleepTime  int
+	WorkTime         int
+	RequestSleepTime int
+}
+
 var (
 	ServerId string
 	fsClient *firestore.Client
+	Config   config
 )
 
+func init() {
 
+	v := viper.New()
+	v.BindEnv("Port", "PORT")
+	v.BindEnv("ProjectId", "PROJECT_ID")
+	v.BindEnv("WorkerSleepTime", "SLEEP_TIME")    //in seconds
+	v.BindEnv("WorkTime", "WORK_TIME")            // in minuets
+	v.BindEnv("RequestSleepTime", "REQUEST_TIME") // in seconds
+	err := v.Unmarshal(&Config)
+	if err != nil {
+		log.Println("unable to decode into struct, %v", err)
+	}
+}
 func worker(id string) {
 	now := time.Now().UTC()
 	counter := 0
+	loops := (Config.WorkTime * 60) / Config.WorkerSleepTime
+	// Mimic some work
 	for {
-		time.Sleep(5000 * time.Millisecond)
+		time.Sleep(time.Duration(Config.WorkerSleepTime) * time.Second)
 		dur := time.Since(now)
 		log.Println("Running for: ", dur)
-		if counter > 10 {
+		// We are done working :)
+		if counter >= int(loops) {
 			t := types.TaskData{"We are golden", types.StatusDone, dur.String(), "None of your business"}
 			fsClient.Doc("tasks/"+id).Set(context.Background(), &t)
 			return
@@ -48,6 +72,7 @@ func worker(id string) {
 }
 
 func longTaskHandler(w http.ResponseWriter, r *http.Request) {
+
 	id := uuid.New().String()
 	accepted := types.AcceptedResponse{ServerId, types.Task{"/taskstatus?task=" + id, id}}
 	t := types.TaskData{"Nothing yet wait for it....", types.StatusPending, "0", ServerId}
@@ -68,7 +93,8 @@ func longTaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 func taskStatusHandler(w http.ResponseWriter, r *http.Request) {
 	task := r.URL.Query().Get("task")
-	time.Sleep(5000 * time.Millisecond)
+	//throttl a bit
+	time.Sleep(time.Duration(time.Duration(Config.RequestSleepTime) * time.Second))
 	ctx := context.Background()
 	docsnap, err := fsClient.Doc("tasks/" + task).Get(ctx)
 	if err != nil {
@@ -91,18 +117,17 @@ func taskStatusHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(js)
-	//w.Write([]byte("Running for:" + dur.String() + " " + t.Result ))
 }
 func main() {
 	ServerId = uuid.New().String()
 	log.Println("Starting Long John Silver demo " + ServerId)
-	httpListenPort := os.Getenv("PORT")
+	httpListenPort := Config.Port
 	if httpListenPort == "" {
 		httpListenPort = "8080"
 	}
 	ctx := context.Background()
 	var err error
-	fsClient, err = firestore.NewClient(ctx, os.Getenv("PROJECT_ID"))
+	fsClient, err = firestore.NewClient(ctx, Config.ProjectId)
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}

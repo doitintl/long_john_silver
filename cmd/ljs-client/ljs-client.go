@@ -8,10 +8,9 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/spf13/viper"
 	"github.com/doitintl/long_john_silver/types"
+	"github.com/spf13/viper"
 )
-
 
 func init() {
 	viper.SetConfigFile("config.json")
@@ -20,23 +19,24 @@ func init() {
 		log.Fatal("ReadInConfig: ", err)
 	}
 }
-var wg sync.WaitGroup
-func main() {
 
-	id,err := getlongtask()
+var wg sync.WaitGroup
+
+func main() {
+	id, err := getlongtask()
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	for i := 1;  i<=viper.GetInt("requests"); i++{
+	for i := 1; i <= viper.GetInt("requests"); i++ {
 		wg.Add(1)
-		go gettaskstatus(id,i)
+		go gettaskstatus(id, i)
 	}
 	wg.Wait()
 	log.Println("We are doen")
 }
 
-func getlongtask() (string, error){
+func getlongtask() (string, error) {
 	req, _ := http.NewRequest("GET", viper.GetString("url")+"longtask", nil)
 
 	req.Header.Add("Accept", "*/*")
@@ -45,7 +45,7 @@ func getlongtask() (string, error){
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Println(err)
-		return "",err
+		return "", err
 	}
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
@@ -53,7 +53,7 @@ func getlongtask() (string, error){
 
 	if err = json.Unmarshal(body, &ac); err != nil {
 		log.Println(err)
-		return "",err
+		return "", err
 	}
 
 	return ac.Task.Id, nil
@@ -71,7 +71,7 @@ func gettaskstatus(taskid string, id int) error {
 			log.Println(err)
 			return err
 		}
-		if res.StatusCode != http.StatusOK{
+		if res.StatusCode != http.StatusOK {
 			return nil
 		}
 		defer res.Body.Close()

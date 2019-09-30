@@ -1,4 +1,4 @@
 {
-  "url":  "loclahost",
+  "url":  "http://loclahost:8080/",
   "requests": 2
 }

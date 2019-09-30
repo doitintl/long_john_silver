@@ -6,4 +6,5 @@ require (
 	cloud.google.com/go/firestore v1.0.0
 	github.com/doitintl/long_john_silver v0.0.0-20190929081610-0ff7281f1229
 	github.com/google/uuid v1.1.1
+	github.com/spf13/viper v1.4.0
 )
