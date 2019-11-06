@@ -4,7 +4,7 @@ type JobStatus string
 
 const (
 	StatusPending JobStatus = "PENDING"
-	StatusDone    JobStatus = "Done"
+	StatusDone    JobStatus = "DONE"
 )
 
 type AcceptedResponse struct {
@@ -31,3 +31,6 @@ type TaskData struct {
 
 }
 
+type Payload struct {
+	Data string  `json:"data"`
+}
