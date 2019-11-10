@@ -85,7 +85,7 @@ func worker(id string, data string) {
 
 func longTask(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var p Payload
+	var p types.Payload
 	err := decoder.Decode(&p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

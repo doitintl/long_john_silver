@@ -37,7 +37,7 @@ func main() {
 }
 
 func getlongtask() (string, error) {
-	req, _ := http.NewRequest("GET", viper.GetString("url")+"longtask", nil)
+	req, _ := http.NewRequest("POST", viper.GetString("url")+"job", nil)
 
 	req.Header.Add("Accept", "*/*")
 	req.Header.Add("Connection", "keep-alive")
@@ -62,7 +62,7 @@ func getlongtask() (string, error) {
 func gettaskstatus(taskid string, id int) error {
 	defer wg.Done()
 	for {
-		req, _ := http.NewRequest("GET", viper.GetString("url")+"taskstatus?task="+taskid, nil)
+		req, _ := http.NewRequest("GET", viper.GetString("url")+"job/"+taskid, nil)
 
 		req.Header.Add("Accept", "*/*")
 		req.Header.Add("Connection", "keep-alive")
